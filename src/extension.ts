@@ -2,18 +2,22 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 
-function readHideList(workspacePath: string): string[] {
+function readHideList(workspacePath: string): RegExp[] {
 	const hideListPath = path.join(workspacePath, '.hideme');
 	try {
 		const hideListContent = fs.readFileSync(hideListPath, 'utf8');
-		return hideListContent.split('\n').map((line) => line.trim());
+		return hideListContent
+			.split('\n')
+			.map((line) => line.trim())
+			.filter((entry) => entry !== '')
+			.map((entry) => new RegExp(`^${entry}$`)); // Use '^' and '$' to match the whole line
 	} catch (error) {
 		console.error(`Error reading .hideme file: ${error}`);
 		return [];
 	}
 }
 
-function hideFilesAndFolders(hideList: string[]) {
+function hideFilesAndFolders(hideList: RegExp[]) {
 	const workspaceFolders = vscode.workspace.workspaceFolders;
 	if (!workspaceFolders) {
 		return;
@@ -24,7 +28,17 @@ function hideFilesAndFolders(hideList: string[]) {
 		const updatedExcludes: Record<string, boolean> = {};
 
 		hideList.forEach((entry) => {
-			updatedExcludes[entry] = true;
+			// Iterate through files and folders in the workspace
+			if (folder.uri.fsPath) {
+				const filesAndFolders = fs.readdirSync(folder.uri.fsPath);
+
+				filesAndFolders.forEach((item) => {
+					if (entry.test(item)) {
+						// If the regular expression matches, exclude the file or folder
+						updatedExcludes[item] = true;
+					}
+				});
+			}
 		});
 
 		config.update('exclude', updatedExcludes, vscode.ConfigurationTarget.Workspace);

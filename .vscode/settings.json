@@ -1,8 +1,11 @@
 // Place your settings in this file to overwrite default and user settings.
 {
     "files.exclude": {
-        "out": false, // set this to true to hide the "out" folder with the compiled JS files
-        "dist": false // set this to true to hide the "dist" folder with the compiled JS files
+        "README.md": true,
+        ".eslintrc.json": true,
+        "package-lock.json": true,
+        "package.json": true,
+        "tsconfig.json": true
     },
     "search.exclude": {
         "out": true, // set this to false to include "out" folder in search results
